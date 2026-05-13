@@ -23,6 +23,7 @@ class FarmGameApp(tk.Tk):
         self.current_screen = None
         self.current_save_path = None
         self.current_save = None
+        self.money = 1000
         self.game_canvas = None
         self.pause_panel = None
         self.paused = False
@@ -62,9 +63,13 @@ class FarmGameApp(tk.Tk):
         self.camera_x = 0
         self.camera_y = 0
         self.water_animation_frame = 0
+        self.current_area = "farm"
         self.farm_rect = (0, 0, 1160, 670)
         self.house_rect = (440, 105, 570, 205)
         self.shop_rect = (830, 405, 980, 515)
+        self.shop_door_rect = (928, 493, 962, 525)
+        self.shop_exit_rect = (340, 590, 420, 640)
+        self.shop_area_rect = (0, 0, 760, 640)
         self.lake_rect = (145, 470, 315, 610)
         self.player_radius = 11
         self.player_speed = 4
@@ -226,8 +231,10 @@ class FarmGameApp(tk.Tk):
         save_data = {
             "farm_name": farm_name,
             "player": {"x": self.player_position[0], "y": self.player_position[1]},
+            "area": "farm",
             "inventory_items": self.inventory_items,
             "inventory_counts": self.inventory_counts,
+            "money": 1000,
             "tilled_soil": [],
             "watering_can_water": self.watering_can_capacity,
             "time": {"day_count": 0, "day_index": 0, "minutes": self.day_start_minutes, "total_minutes": 0},
@@ -240,6 +247,8 @@ class FarmGameApp(tk.Tk):
         self.current_save_path = save_path
         self.current_save = save_data
         self.selected_inventory_slot = None
+        self.current_area = save_data.get("area", "farm")
+        self.money = int(save_data.get("money", 1000))
         self.inventory_items, self.inventory_counts = self.load_inventory(save_data)
         self.watering_can_water = int(save_data.get("watering_can_water", self.watering_can_capacity))
         self.watering_can_water = max(0, min(self.watering_can_water, self.watering_can_capacity))
@@ -292,6 +301,21 @@ class FarmGameApp(tk.Tk):
             self.pause_panel.destroy()
             self.pause_panel = None
         canvas.delete("all")
+        if self.current_area == "shop":
+            self.draw_shop_interior()
+        else:
+            self.draw_farm_area()
+        self.draw_feedback_message()
+        self.draw_time_hud()
+        self.draw_game_buttons()
+        self.draw_inventory()
+        self.draw_dragged_item()
+
+        if self.paused:
+            self.draw_pause_menu()
+
+    def draw_farm_area(self):
+        canvas = self.game_canvas
         self.update_camera()
 
         x1, y1, x2, y2 = self.farm_rect
@@ -310,18 +334,37 @@ class FarmGameApp(tk.Tk):
         self.draw_house(hx1, hy1, hx2, hy2)
         self.draw_shop(sx1, sy1, sx2, sy2)
 
-        player_x, player_y = self.world_to_screen(px, py)
-        canvas.create_oval(player_x - r, player_y - r, player_x + r, player_y + r, fill="#2f65c8", outline="#173b76", width=2)
-        canvas.create_oval(player_x - 5, player_y - 8, player_x - 1, player_y - 4, fill="white", outline="")
-        canvas.create_oval(player_x + 1, player_y - 8, player_x + 5, player_y - 4, fill="white", outline="")
-        self.draw_feedback_message()
-        self.draw_time_hud()
-        self.draw_game_buttons()
-        self.draw_inventory()
-        self.draw_dragged_item()
+        self.draw_player(px, py)
 
-        if self.paused:
-            self.draw_pause_menu()
+    def draw_shop_interior(self):
+        canvas = self.game_canvas
+        self.camera_x = 0
+        self.camera_y = 0
+        x1, y1, x2, y2 = self.shop_area_rect
+        canvas.create_rectangle(x1, y1, x2, y2, fill="#c9a56f", outline="#6f5530", width=4)
+        canvas.create_rectangle(70, 58, 690, 150, fill="#a77942", outline="#5f3c1d", width=3)
+        canvas.create_rectangle(110, 185, 650, 260, fill="#7b4a25", outline="#4b2d17", width=3)
+        canvas.create_rectangle(0, 0, 760, 42, fill="#8c6135", outline="")
+        canvas.create_text(380, 26, text="Shop", fill="#fff8e7", font=("Segoe UI", 16, "bold"))
+
+        canvas.create_rectangle(373, 162, 387, 185, fill="#3f6f7f", outline="#284955", width=2)
+        canvas.create_oval(370, 138, 390, 158, fill="#d6a77a", outline="#6b4325", width=2)
+        canvas.create_oval(375, 143, 378, 146, fill="#2d1d12", outline="")
+        canvas.create_oval(382, 143, 385, 146, fill="#2d1d12", outline="")
+
+        ex1, ey1, ex2, ey2 = self.shop_exit_rect
+        canvas.create_rectangle(ex1, ey1, ex2, ey2, fill="#5d3b23", outline="#2f1d10", width=3)
+        canvas.create_line(ex1, ey1, ex2, ey1, fill="#c9a56f", width=3)
+        canvas.create_oval(ex2 - 18, ey1 + 22, ex2 - 12, ey1 + 28, fill="#d8b45f", outline="")
+        canvas.create_text((ex1 + ex2) / 2, ey1 - 12, text="Exit", fill="#3c2c1a", font=("Segoe UI", 10, "bold"))
+        self.draw_player(self.player_position[0], self.player_position[1])
+
+    def draw_player(self, x, y):
+        px, py = self.world_to_screen(x, y)
+        r = self.player_radius
+        self.game_canvas.create_oval(px - r, py - r, px + r, py + r, fill="#2f65c8", outline="#173b76", width=2)
+        self.game_canvas.create_oval(px - 5, py - 8, px - 1, py - 4, fill="white", outline="")
+        self.game_canvas.create_oval(px + 1, py - 8, px + 5, py - 4, fill="white", outline="")
 
     def update_camera(self):
         if self.game_canvas is None:
@@ -359,7 +402,8 @@ class FarmGameApp(tk.Tk):
         canvas.create_rectangle(sx1, sy1 + 28, sx2, sy2, fill="#c6924b", outline="#6b4a1f", width=3)
         canvas.create_polygon(sx1 - 10, sy1 + 32, (sx1 + sx2) / 2, sy1 - 16, sx2 + 10, sy1 + 32, fill="#3f6f7f", outline="#284955")
         canvas.create_rectangle(sx1 + 18, sy1 + 56, sx1 + 50, sy1 + 94, fill="#7dc7d9", outline="#426d78", width=2)
-        canvas.create_rectangle(sx2 - 48, sy1 + 60, sx2 - 18, sy2, fill="#6a4427", outline="#3d2716", width=2)
+        canvas.create_rectangle(sx2 - 52, sy1 + 60, sx2 - 18, sy2 + 10, fill="#6a4427", outline="#3d2716", width=2)
+        canvas.create_oval(sx2 - 28, sy1 + 91, sx2 - 23, sy1 + 96, fill="#d8b45f", outline="")
         canvas.create_text((sx1 + sx2) / 2, sy1 + 45, text="Shop", fill="#3a2814", font=("Segoe UI", 13, "bold"))
 
     def draw_lake(self, x1, y1, x2, y2):
@@ -554,6 +598,17 @@ class FarmGameApp(tk.Tk):
             fill="#3c2c1a",
             font=("Segoe UI", 8, "bold"),
         )
+        money_y1 = y2 + 5
+        money_y2 = money_y1 + 22
+        canvas.create_rectangle(x1, money_y1, x2, money_y2, fill="#fff8e7", outline="#6f5530", width=2)
+        canvas.create_text(
+            x1 + 7,
+            (money_y1 + money_y2) / 2,
+            text=f"${self.money}",
+            anchor="w",
+            fill="#2f5d24",
+            font=("Segoe UI", 9, "bold"),
+        )
 
     def draw_game_buttons(self):
         canvas = self.game_canvas
@@ -705,17 +760,25 @@ class FarmGameApp(tk.Tk):
             return
 
         if self.selected_item() == "hoe":
+            if self.current_area != "farm":
+                return
             world_x, world_y = self.screen_to_world(event.x, event.y)
             self.try_till_soil(world_x, world_y)
         elif self.selected_item() == "watering_can":
+            if self.current_area != "farm":
+                return
             world_x, world_y = self.screen_to_world(event.x, event.y)
             self.try_water_soil(world_x, world_y)
         elif self.selected_item() == "lettuce_seed":
+            if self.current_area != "farm":
+                return
             world_x, world_y = self.screen_to_world(event.x, event.y)
             self.try_plant_lettuce(world_x, world_y)
 
     def handle_right_click(self, event):
         if self.paused:
+            return
+        if self.current_area != "farm":
             return
 
         world_x, world_y = self.screen_to_world(event.x, event.y)
@@ -1200,9 +1263,17 @@ class FarmGameApp(tk.Tk):
             self.player_position[0] = next_x
         if self.can_player_move_to(self.player_position[0], next_y):
             self.player_position[1] = next_y
+        self.check_area_transition()
 
     def can_player_move_to(self, x, y):
         r = self.player_radius
+        if self.current_area == "shop":
+            x1, y1, x2, y2 = self.shop_area_rect
+            inside_shop = x1 + r <= x <= x2 - r and y1 + r <= y <= y2 - r
+            counter_blocked = 100 - r <= x <= 660 + r and 185 - r <= y <= 260 + r
+            npc_blocked = 370 - r <= x <= 390 + r and 138 - r <= y <= 185 + r
+            return inside_shop and not counter_blocked and not npc_blocked
+
         x1, y1, x2, y2 = self.farm_rect
         hx1, hy1, hx2, hy2 = self.house_rect
         sx1, sy1, sx2, sy2 = self.shop_rect
@@ -1211,8 +1282,45 @@ class FarmGameApp(tk.Tk):
         inside_farm = x1 + r <= x <= x2 - r and y1 + r <= y <= y2 - r
         inside_house = hx1 - r <= x <= hx2 + r and hy1 - r <= y <= hy2 + r
         inside_shop = sx1 - r <= x <= sx2 + r and sy1 - r <= y <= sy2 + r
+        inside_shop_door = self.is_player_touching_rect(x, y, self.shop_door_rect)
         inside_lake = lx1 - r <= x <= lx2 + r and ly1 - r <= y <= ly2 + r and self.is_point_in_lake(x, y)
-        return inside_farm and not inside_house and not inside_shop and not inside_lake
+        return inside_farm and not inside_house and (not inside_shop or inside_shop_door) and not inside_lake
+
+    def check_area_transition(self):
+        if self.current_area == "farm" and self.is_player_touching_rect(
+            self.player_position[0],
+            self.player_position[1],
+            self.shop_door_rect,
+        ):
+            self.enter_shop()
+        elif self.current_area == "shop" and self.is_player_touching_rect(
+            self.player_position[0],
+            self.player_position[1],
+            self.shop_exit_rect,
+        ):
+            self.exit_shop()
+
+    def enter_shop(self):
+        self.current_area = "shop"
+        self.player_position = [380, 535]
+        self.pressed_keys.clear()
+        self.show_area_transition()
+
+    def exit_shop(self):
+        self.current_area = "farm"
+        self.player_position = [945, 542]
+        self.pressed_keys.clear()
+        self.show_area_transition()
+
+    def show_area_transition(self):
+        self.fade_to_black()
+        self.draw_game()
+        self.fade_from_black()
+
+    def is_player_touching_rect(self, x, y, rect):
+        r = self.player_radius
+        x1, y1, x2, y2 = rect
+        return x + r >= x1 and x - r <= x2 and y + r >= y1 and y - r <= y2
 
     def toggle_pause(self):
         self.paused = not self.paused
@@ -1251,8 +1359,10 @@ class FarmGameApp(tk.Tk):
             "x": self.player_position[0],
             "y": self.player_position[1],
         }
+        self.current_save["area"] = self.current_area
         self.current_save["inventory_items"] = self.inventory_items
         self.current_save["inventory_counts"] = self.inventory_counts
+        self.current_save["money"] = self.money
         self.current_save["tilled_soil"] = [
             {
                 "x": tile["x"],
