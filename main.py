@@ -70,6 +70,7 @@ class FarmGameApp(tk.Tk):
         self.shop_door_rect = (928, 493, 962, 525)
         self.shop_exit_rect = (340, 590, 420, 640)
         self.shop_area_rect = (0, 0, 760, 640)
+        self.shop_npc_interaction_rect = (340, 260, 420, 295)
         self.lake_rect = (145, 470, 315, 610)
         self.player_radius = 11
         self.player_speed = 4
@@ -351,6 +352,8 @@ class FarmGameApp(tk.Tk):
         canvas.create_oval(370, 138, 390, 158, fill="#d6a77a", outline="#6b4325", width=2)
         canvas.create_oval(375, 143, 378, 146, fill="#2d1d12", outline="")
         canvas.create_oval(382, 143, 385, 146, fill="#2d1d12", outline="")
+        if self.is_player_touching_rect(self.player_position[0], self.player_position[1], self.shop_npc_interaction_rect):
+            self.draw_dialogue_hint(380, 126)
 
         ex1, ey1, ex2, ey2 = self.shop_exit_rect
         canvas.create_rectangle(ex1, ey1, ex2, ey2, fill="#5d3b23", outline="#2f1d10", width=3)
@@ -358,6 +361,14 @@ class FarmGameApp(tk.Tk):
         canvas.create_oval(ex2 - 18, ey1 + 22, ex2 - 12, ey1 + 28, fill="#d8b45f", outline="")
         canvas.create_text((ex1 + ex2) / 2, ey1 - 12, text="Exit", fill="#3c2c1a", font=("Segoe UI", 10, "bold"))
         self.draw_player(self.player_position[0], self.player_position[1])
+
+    def draw_dialogue_hint(self, x, y):
+        canvas = self.game_canvas
+        canvas.create_oval(x - 15, y - 28, x + 15, y - 4, fill="#fff8e7", outline="#3c2c1a", width=2)
+        canvas.create_polygon(x - 5, y - 5, x + 1, y + 6, x + 6, y - 5, fill="#fff8e7", outline="#3c2c1a")
+        canvas.create_oval(x - 7, y - 18, x - 4, y - 15, fill="#3c2c1a", outline="")
+        canvas.create_oval(x - 1, y - 18, x + 2, y - 15, fill="#3c2c1a", outline="")
+        canvas.create_oval(x + 5, y - 18, x + 8, y - 15, fill="#3c2c1a", outline="")
 
     def draw_player(self, x, y):
         px, py = self.world_to_screen(x, y)
