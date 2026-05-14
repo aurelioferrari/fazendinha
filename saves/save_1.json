@@ -1,14 +1,14 @@
 {
   "farm_name": "teste",
   "player": {
-    "x": 251.3728000000001,
-    "y": 226.14800000000037
+    "x": 411.414400000001,
+    "y": 428.29600000000073
   },
   "tilled_soil": [
     {
       "x": 195.0,
       "y": 315.0,
-      "watered": false,
+      "watered": true,
       "crop": null,
       "planted_at": null,
       "growth_minutes": 0
@@ -16,7 +16,7 @@
     {
       "x": 195.0,
       "y": 285.0,
-      "watered": false,
+      "watered": true,
       "crop": null,
       "planted_at": null,
       "growth_minutes": 0
@@ -25,33 +25,33 @@
       "x": 225.0,
       "y": 285.0,
       "watered": false,
-      "crop": "lettuce",
-      "planted_at": 13340,
-      "growth_minutes": 122810
-    },
-    {
-      "x": 255.0,
-      "y": 285.0,
-      "watered": false,
-      "crop": "lettuce",
-      "planted_at": 13340,
-      "growth_minutes": 122810
-    },
-    {
-      "x": 225.0,
-      "y": 315.0,
-      "watered": false,
       "crop": null,
       "planted_at": null,
       "growth_minutes": 0
     },
     {
       "x": 255.0,
+      "y": 285.0,
+      "watered": false,
+      "crop": null,
+      "planted_at": null,
+      "growth_minutes": 0
+    },
+    {
+      "x": 225.0,
       "y": 315.0,
       "watered": false,
       "crop": "lettuce",
-      "planted_at": 13330,
-      "growth_minutes": 122820
+      "planted_at": 136250,
+      "growth_minutes": 4240
+    },
+    {
+      "x": 255.0,
+      "y": 315.0,
+      "watered": false,
+      "crop": null,
+      "planted_at": null,
+      "growth_minutes": 0
     },
     {
       "x": 285.0,
@@ -65,9 +65,9 @@
       "x": 285.0,
       "y": 315.0,
       "watered": true,
-      "crop": "lettuce",
-      "planted_at": 13330,
-      "growth_minutes": 122820
+      "crop": null,
+      "planted_at": null,
+      "growth_minutes": 0
     },
     {
       "x": 315.0,
@@ -105,20 +105,92 @@
       "x": 255.0,
       "y": 255.0,
       "watered": true,
-      "crop": "lettuce",
-      "planted_at": 17650,
-      "growth_minutes": 118500
+      "crop": null,
+      "planted_at": null,
+      "growth_minutes": 0
     },
     {
       "x": 225.0,
       "y": 255.0,
       "watered": false,
-      "crop": "lettuce",
-      "planted_at": 17640,
-      "growth_minutes": 118510
+      "crop": null,
+      "planted_at": null,
+      "growth_minutes": 0
     },
     {
       "x": 195.0,
+      "y": 255.0,
+      "watered": true,
+      "crop": null,
+      "planted_at": null,
+      "growth_minutes": 0
+    },
+    {
+      "x": 195.0,
+      "y": 345.0,
+      "watered": false,
+      "crop": "lettuce",
+      "planted_at": 136250,
+      "growth_minutes": 4240
+    },
+    {
+      "x": 225.0,
+      "y": 345.0,
+      "watered": false,
+      "crop": "lettuce",
+      "planted_at": 136250,
+      "growth_minutes": 4240
+    },
+    {
+      "x": 255.0,
+      "y": 345.0,
+      "watered": true,
+      "crop": null,
+      "planted_at": null,
+      "growth_minutes": 0
+    },
+    {
+      "x": 285.0,
+      "y": 345.0,
+      "watered": true,
+      "crop": null,
+      "planted_at": null,
+      "growth_minutes": 0
+    },
+    {
+      "x": 315.0,
+      "y": 345.0,
+      "watered": true,
+      "crop": "lettuce",
+      "planted_at": 140110,
+      "growth_minutes": 380
+    },
+    {
+      "x": 435.0,
+      "y": 255.0,
+      "watered": false,
+      "crop": null,
+      "planted_at": null,
+      "growth_minutes": 0
+    },
+    {
+      "x": 405.0,
+      "y": 255.0,
+      "watered": false,
+      "crop": null,
+      "planted_at": null,
+      "growth_minutes": 0
+    },
+    {
+      "x": 375.0,
+      "y": 255.0,
+      "watered": false,
+      "crop": null,
+      "planted_at": null,
+      "growth_minutes": 0
+    },
+    {
+      "x": 345.0,
       "y": 255.0,
       "watered": false,
       "crop": null,
@@ -129,32 +201,34 @@
   "watering_can_water": 15,
   "inventory_items": [
     "hoe",
+    null,
     "watering_can",
-    "lettuce_seed",
+    null,
     "lettuce",
-    null,
-    null,
+    "lettuce_seed",
     null,
     null,
     null,
     null
   ],
   "time": {
-    "day_count": 94,
-    "day_index": 3,
-    "minutes": 790,
-    "total_minutes": 136150
+    "day_count": 97,
+    "day_index": 6,
+    "minutes": 810,
+    "total_minutes": 140490
   },
   "inventory_counts": [
     null,
     null,
-    10,
+    null,
+    null,
+    12,
     6,
     null,
     null,
     null,
-    null,
-    null,
     null
-  ]
+  ],
+  "area": "farm",
+  "money": 1000
 }

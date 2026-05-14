@@ -27,6 +27,11 @@ class FarmGameApp(tk.Tk):
         self.game_canvas = None
         self.pause_panel = None
         self.paused = False
+        self.dialogue_active = False
+        self.dialogue_text = ""
+        self.dialogue_step = None
+        self.dialogue_options = []
+        self.dialogue_option_boxes = []
         self.game_loop_id = None
         self.pressed_keys = set()
         self.selected_inventory_slot = None
@@ -311,6 +316,8 @@ class FarmGameApp(tk.Tk):
         self.draw_game_buttons()
         self.draw_inventory()
         self.draw_dragged_item()
+        self.draw_dialogue_box()
+        self.draw_dialogue_options()
 
         if self.paused:
             self.draw_pause_menu()
@@ -369,6 +376,51 @@ class FarmGameApp(tk.Tk):
         canvas.create_oval(x - 7, y - 18, x - 4, y - 15, fill="#3c2c1a", outline="")
         canvas.create_oval(x - 1, y - 18, x + 2, y - 15, fill="#3c2c1a", outline="")
         canvas.create_oval(x + 5, y - 18, x + 8, y - 15, fill="#3c2c1a", outline="")
+
+    def draw_dialogue_box(self):
+        if not self.dialogue_active:
+            return
+
+        canvas = self.game_canvas
+        width = canvas.winfo_width()
+        height = canvas.winfo_height()
+        x1 = 80
+        y1 = height - 142
+        x2 = width - 80
+        y2 = height - 82
+        canvas.create_rectangle(x1, y1, x2, y2, fill="#fff8e7", outline="#6f5530", width=3)
+        canvas.create_text(
+            x1 + 18,
+            y1 + 24,
+            text=self.dialogue_text,
+            anchor="w",
+            fill="#3c2c1a",
+            font=("Segoe UI", 13, "bold"),
+        )
+
+    def draw_dialogue_options(self):
+        self.dialogue_option_boxes = []
+        if not self.dialogue_active or not self.dialogue_options:
+            return
+
+        x = 18
+        y = 82
+        width = 112
+        height = 30
+        gap = 8
+        for index, option in enumerate(self.dialogue_options):
+            y1 = y + index * (height + gap)
+            y2 = y1 + height
+            self.game_canvas.create_rectangle(x, y1, x + width, y2, fill="#fff8e7", outline="#6f5530", width=2)
+            self.game_canvas.create_text(
+                x + 12,
+                (y1 + y2) / 2,
+                text=option,
+                anchor="w",
+                fill="#3c2c1a",
+                font=("Segoe UI", 10, "bold"),
+            )
+            self.dialogue_option_boxes.append((x, y1, x + width, y2, option))
 
     def draw_player(self, x, y):
         px, py = self.world_to_screen(x, y)
@@ -713,6 +765,9 @@ class FarmGameApp(tk.Tk):
     def handle_mouse_press(self, event):
         if self.paused:
             return
+        if self.dialogue_active:
+            self.handle_dialogue_click(event.x, event.y)
+            return
 
         button_action = self.game_button_at(event.x, event.y)
         if button_action is not None:
@@ -743,7 +798,7 @@ class FarmGameApp(tk.Tk):
         return None
 
     def handle_mouse_drag(self, event):
-        if self.paused or self.drag_start_slot is None:
+        if self.paused or self.dialogue_active or self.drag_start_slot is None:
             return
 
         if self.dragged_item is None:
@@ -760,6 +815,8 @@ class FarmGameApp(tk.Tk):
 
     def handle_mouse_release(self, event):
         if self.paused:
+            return
+        if self.dialogue_active:
             return
 
         if self.mouse_pressed_game_button:
@@ -787,7 +844,7 @@ class FarmGameApp(tk.Tk):
             self.try_plant_lettuce(world_x, world_y)
 
     def handle_right_click(self, event):
-        if self.paused:
+        if self.paused or self.dialogue_active:
             return
         if self.current_area != "farm":
             return
@@ -1179,6 +1236,13 @@ class FarmGameApp(tk.Tk):
 
     def handle_key_press(self, event):
         key = event.keysym.lower()
+        if self.dialogue_active:
+            if key == "space":
+                self.advance_dialogue()
+            return
+        if key == "e":
+            self.try_start_npc_dialogue()
+            return
         if key in {"w", "a", "s", "d"}:
             self.pressed_keys.add(key)
 
@@ -1187,6 +1251,48 @@ class FarmGameApp(tk.Tk):
         if key in {"w", "a", "s", "d"}:
             self.pressed_keys.discard(key)
 
+    def try_start_npc_dialogue(self):
+        if self.current_area != "shop":
+            return
+        if not self.is_player_touching_rect(self.player_position[0], self.player_position[1], self.shop_npc_interaction_rect):
+            return
+
+        self.dialogue_active = True
+        self.dialogue_text = "Bem-vindo"
+        self.dialogue_step = "welcome"
+        self.dialogue_options = []
+        self.pressed_keys.clear()
+        self.draw_game()
+
+    def end_dialogue(self):
+        self.dialogue_active = False
+        self.dialogue_text = ""
+        self.dialogue_step = None
+        self.dialogue_options = []
+        self.dialogue_option_boxes = []
+        self.pressed_keys.clear()
+        self.draw_game()
+
+    def advance_dialogue(self):
+        if self.dialogue_step == "welcome":
+            self.dialogue_step = "options"
+            self.dialogue_text = "How can I help you?"
+            self.dialogue_options = ["Buy", "Sell", "See ya!"]
+            self.draw_game()
+        else:
+            self.end_dialogue()
+
+    def handle_dialogue_click(self, x, y):
+        for x1, y1, x2, y2, option in self.dialogue_option_boxes:
+            if x1 <= x <= x2 and y1 <= y <= y2:
+                self.handle_dialogue_option(option)
+                return
+        if not self.dialogue_options:
+            self.advance_dialogue()
+
+    def handle_dialogue_option(self, option):
+        self.end_dialogue()
+
     def run_game_loop(self):
         if self.game_canvas is None:
             return
@@ -1194,7 +1300,8 @@ class FarmGameApp(tk.Tk):
         if not self.paused:
             self.water_animation_frame += 1
             self.advance_time(16)
-            self.update_player_position()
+            if not self.dialogue_active:
+                self.update_player_position()
             self.draw_game()
         self.game_loop_id = self.after(16, self.run_game_loop)
 
@@ -1335,6 +1442,12 @@ class FarmGameApp(tk.Tk):
 
     def toggle_pause(self):
         self.paused = not self.paused
+        if self.paused:
+            self.dialogue_active = False
+            self.dialogue_text = ""
+            self.dialogue_step = None
+            self.dialogue_options = []
+            self.dialogue_option_boxes = []
         self.pressed_keys.clear()
         self.update_cursor()
         self.draw_game()
@@ -1406,6 +1519,11 @@ class FarmGameApp(tk.Tk):
         self.game_canvas = None
         self.pause_panel = None
         self.paused = False
+        self.dialogue_active = False
+        self.dialogue_text = ""
+        self.dialogue_step = None
+        self.dialogue_options = []
+        self.dialogue_option_boxes = []
         self.selected_inventory_slot = None
         self.inventory_slots = []
         self.clear_inventory_drag()
